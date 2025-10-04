@@ -1,3 +1,7 @@
+import os
+import re
+import traceback
+import pandas as pd
 import json
 import random
 from pathlib import Path
@@ -21,7 +25,7 @@ def load_passages(path):
     return passages
 
 # 2. Dùng model sinh Q&A từ passage
-def generate_qa_from_passage(generator, passage_text):
+def generate_qa_from_passage(client, passage_text):
     prompt = f"""
     Đoạn văn: {passage_text}
 
@@ -29,6 +33,7 @@ def generate_qa_from_passage(generator, passage_text):
     2. Trả lời ngắn gọn.
     3. Gán nhãn câu hỏi vào một trong 15 lớp sau: 
     [Definition, Symptom, Cause, Treatment, Prevention, RiskFactor, Disease, SubDisease, Population, Detail, Complication, Advice, Prevention, Topic, SubTopic].
+    Nếu đoạn văn không thuộc lớp nào rõ ràng, hoặc không có thông tin phù hợp (ví dụ Application không tồn tại), hãy trả về "None".
     
     Output JSON:
     {{
@@ -36,14 +41,28 @@ def generate_qa_from_passage(generator, passage_text):
     "answer": "...",
     "label": "..."
     }}
-    """
-    out = generator(prompt, max_new_tokens=256, do_sample=True)[0]["generated_text"]
-    # ở đây bạn parse lại để lấy question/answer (LLM sẽ trả JSON)
+
+    Ví dụ output:
+    {{
+    "question": "Triệu chứng nào gợi ý bạn nên đi khám phụ khoa?",
+    "answers": ["Khi xuất hiện các triệu chứng như đau bụng kinh dữ dội, khí hư bất thường, rối loạn kinh nguyệt hoặc đau khi quan hệ tình dục, bạn nên đi khám bác sĩ phụ khoa."],
+    "labels": ["symptom"]
+    }}
+    
+"""
+
+    resp = client.chat.completions.create(
+        model=MODEL,
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.7,
+    )
+
+    out = resp.choices[0].message.content
     try:
         parsed = json.loads(out[out.index("{"):out.rindex("}")+1])
     except:
-        parsed = {"question": None, "answer": None}
-    return parsed["question"], parsed["answer"]
+        parsed = {"question": None, "answer": None, "label": None}
+    return parsed["question"], parsed["answer"], parsed["label"]
 
 # 3. Xây ctxs (positive + negatives)
 def build_ctxs(passages, pos_idx, num_neg=2):
@@ -72,13 +91,10 @@ def build_ctxs(passages, pos_idx, num_neg=2):
 if __name__ == "__main__":
     passages = load_passages("datasets/passages.jsonl")
 
-    # thay bằng model Việt Nam (vd: VietAI/gpt-j-6B-vietnamese, PhoGPT, Qwen-vn, ...)
-    generator = pipeline("text-generation", model=MODEL)
-
     out_path = Path("datasets/synthetic_qas.jsonl")
     with open(out_path, "w", encoding="utf-8") as f:
         for i, passage in enumerate(passages[:50]):  # ví dụ sinh 50 query
-            q, a = generate_qa_from_passage(generator, passage["text"])
+            q, a, l = generate_qa_from_passage(client, passage["text"])
             if not q or not a:
                 continue
             ctxs = build_ctxs(passages, i, num_neg=3)
@@ -86,6 +102,7 @@ if __name__ == "__main__":
             example = {
                 "question": q,
                 "answers": [a],
+                "labels": [l] if l else [],
                 "ctxs": ctxs
             }
             f.write(json.dumps(example, ensure_ascii=False) + "\n")
