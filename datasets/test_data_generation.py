@@ -25,11 +25,11 @@ TRANSFORMERS_CACHE = os.getenv("TRANSFORMERS_CACHE", "D:/huggingface_cache")
 
 PASSAGES_PATH = Path(os.getenv("PASSAGES_PATH", "datasets/passages.jsonl"))
 GRAPH_INFO_PATH = Path(os.getenv("GRAPH_INFO_PATH", "datasets/graph_info.txt"))
-OUTPUT_PATH = Path(os.getenv("OUTPUT_PATH", "datasets/qas_synthetic.jsonl"))
+OUTPUT_PATH = Path(os.getenv("OUTPUT_PATH", "datasets/qas_synthetic_vi.jsonl"))
 
-TOP_K_PASSAGES = int(os.getenv("TOP_K_PASSAGES", "5"))
+TOP_K_PASSAGES = int(os.getenv("TOP_K_PASSAGES", "3"))
 NEGATIVE_CTXS = int(os.getenv("NEGATIVE_CTXS", "3"))
-MAX_SENTENCES_PER_ANSWER = int(os.getenv("MAX_SENTENCES_PER_ANSWER", "6"))
+MAX_SENTENCES_PER_ANSWER = int(os.getenv("MAX_SENTENCES_PER_ANSWER", "5"))
 REFINE_ANSWER_WITH_LLM = os.getenv("REFINE_ANSWER_WITH_LLM", "1") in ("1", "true", "True")
 LLM_TEMPERATURE = float(os.getenv("LLM_TEMPERATURE", "0.2"))
 MAX_Q_PER_ENTITY = int(os.getenv("MAX_Q_PER_ENTITY", "4"))
@@ -505,7 +505,10 @@ def refine_answer_with_llm_vi(extracted_sentences: list, entity: str, layer: str
 
 def rephrase_question_vi(base_question: str):
     prompt = textwrap.dedent(f"""
-    Viết lại câu hỏi sau bằng Tiếng Việt tự nhiên, ngắn gọn, thân thiện:
+    Bạn là một người dân thường không chuyên về y học. Nhiệm vụ của bạn là viết lại câu hỏi sau đây bằng tiếng Việt sao cho:
+    1) Câu hỏi rõ ràng, dễ hiểu, tự nhiên như cách người Việt Nam hay hỏi.
+    2) Giữ nguyên ý nghĩa gốc, không thêm bớt thông tin.
+    3) Câu hỏi không quá dài (không quá 20 từ).
     Original: {base_question}
     Output JSON:
     {{"question":"..."}}
