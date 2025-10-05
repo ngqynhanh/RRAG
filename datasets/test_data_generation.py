@@ -146,7 +146,7 @@ TEMPLATES = {
     "Cung cấp thêm thông tin về {main}","{main} bao gồm những gì",
     "Những khía cạnh cần lưu ý về {main}"
   ],
-  "Subdisease": [
+  "SubDisease": [
     "Các thể của {main}","Phân loại {main}","{main} gồm các nhóm nào",
     "Các loại {main}","Phân nhóm bệnh {main}","{main} có mấy thể chính",
     "Kể tên các dạng {main}","Bệnh {main} chia thành những thể nào",
@@ -184,59 +184,52 @@ TEMPLATES = {
   ]
 }
 
-TEMPLATES_CTX={
-  "Symptom":["Triệu chứng của {main} trong {ctx}","Dấu hiệu {main} khi {ctx}"],
-  "Cause":["Nguyên nhân {main} trong {ctx}","Tại sao có {main} khi {ctx}"],
-  "Treatment":["Điều trị {main} trong {ctx}","Xử lý {main} khi {ctx}"],
-  "Complication":["Biến chứng {main} trong {ctx}","Rủi ro của {main} khi {ctx}"],
-  "Population":["{main} trong {ctx} thường gặp ở ai","Ai hay mắc {main} khi {ctx}"],
-  "Definition":["Định nghĩa {main} trong {ctx}","{main} là gì khi {ctx}"],
-  "Detail":["Thông tin chi tiết {main} trong {ctx}","Điều cần biết về {main} khi {ctx}"],
-  "Subdisease":["Các thể {main} trong {ctx}","Phân loại {main} khi {ctx}"],
-  "Application":["Ứng dụng của {main} trong {ctx}","{main} được dùng thế nào khi {ctx}"],
-  "Advice":["Lời khuyên khi bị {main} trong {ctx}","Nên làm gì với {main} khi {ctx}"],
-  "RiskFactor":["Yếu tố nguy cơ {main} trong {ctx}","Nguy cơ mắc {main} khi {ctx}"],
-  "Prevention":["Phòng ngừa {main} trong {ctx}","Làm sao tránh {main} khi {ctx}"]
-}
+# TEMPLATES_CTX={
+#   "Symptom":["Triệu chứng của {main} trong {ctx}","Dấu hiệu {main} khi {ctx}"],
+#   "Cause":["Nguyên nhân {main} trong {ctx}","Tại sao có {main} khi {ctx}"],
+#   "Treatment":["Điều trị {main} trong {ctx}","Xử lý {main} khi {ctx}"],
+#   "Complication":["Biến chứng {main} trong {ctx}","Rủi ro của {main} khi {ctx}"],
+#   "Population":["{main} trong {ctx} thường gặp ở ai","Ai hay mắc {main} khi {ctx}"],
+#   "Definition":["Định nghĩa {main} trong {ctx}","{main} là gì khi {ctx}"],
+#   "Detail":["Thông tin chi tiết {main} trong {ctx}","Điều cần biết về {main} khi {ctx}"],
+#   "Subdisease":["Các thể {main} trong {ctx}","Phân loại {main} khi {ctx}"],
+#   "Application":["Ứng dụng của {main} trong {ctx}","{main} được dùng thế nào khi {ctx}"],
+#   "Advice":["Lời khuyên khi bị {main} trong {ctx}","Nên làm gì với {main} khi {ctx}"],
+#   "RiskFactor":["Yếu tố nguy cơ {main} trong {ctx}","Nguy cơ mắc {main} khi {ctx}"],
+#   "Prevention":["Phòng ngừa {main} trong {ctx}","Làm sao tránh {main} khi {ctx}"]
+# }
 
-MULTI_TEMPLATES=[
-    (["Symptom","Treatment"],["Triệu chứng và cách điều trị {main}","Dấu hiệu của {main} và chữa thế nào"]),
-    (["Symptom","Cause"],["Triệu chứng và nguyên nhân của {main}","Vì sao mắc {main} và có triệu chứng gì"]),
-    (["Symptom","Treatment","Cause"],["Triệu chứng, nguyên nhân và cách chữa {main}","Nguyên nhân, triệu chứng và điều trị {main}"]),
-    (["Definition","Population"],["{main} là gì và ai dễ mắc","Định nghĩa và đối tượng nguy cơ của {main}"]),
-    (["Treatment","Complication"],["Điều trị {main} và các biến chứng có thể gặp","{main}: biến chứng và hướng điều trị"]),
-    (["Cause","Population"],["Nguyên nhân và đối tượng dễ mắc {main}","{main}: vì sao bị và thường gặp ở ai"]),
-    (["Subdisease","Symptom"],["Các thể {main} và triệu chứng đi kèm","Phân loại {main} cùng dấu hiệu nhận biết"]),
-    (["RiskFactor","Prevention"],["Yếu tố nguy cơ và cách phòng tránh {main}","Làm sao để phòng ngừa {main} và ai dễ mắc"]),
-    (["Advice","Treatment"],["Lời khuyên và phương pháp điều trị {main}","Khi bị {main} nên làm gì và chữa thế nào"])
-]
+# MULTI_TEMPLATES=[
+#     (["Symptom","Treatment"],["Triệu chứng và cách điều trị {main}","Dấu hiệu của {main} và chữa thế nào"]),
+#     (["Symptom","Cause"],["Triệu chứng và nguyên nhân của {main}","Vì sao mắc {main} và có triệu chứng gì"]),
+#     (["Symptom","Treatment","Cause"],["Triệu chứng, nguyên nhân và cách chữa {main}","Nguyên nhân, triệu chứng và điều trị {main}"]),
+#     (["Definition","Population"],["{main} là gì và ai dễ mắc","Định nghĩa và đối tượng nguy cơ của {main}"]),
+#     (["Treatment","Complication"],["Điều trị {main} và các biến chứng có thể gặp","{main}: biến chứng và hướng điều trị"]),
+#     (["Cause","Population"],["Nguyên nhân và đối tượng dễ mắc {main}","{main}: vì sao bị và thường gặp ở ai"]),
+#     (["Subdisease","Symptom"],["Các thể {main} và triệu chứng đi kèm","Phân loại {main} cùng dấu hiệu nhận biết"]),
+#     (["RiskFactor","Prevention"],["Yếu tố nguy cơ và cách phòng tránh {main}","Làm sao để phòng ngừa {main} và ai dễ mắc"]),
+#     (["Advice","Treatment"],["Lời khuyên và phương pháp điều trị {main}","Khi bị {main} nên làm gì và chữa thế nào"])
+# ]
 
-MULTI_TEMPLATES_CTX=[
-    (["Symptom","Treatment"],["Triệu chứng và cách điều trị {main} trong {ctx}","{main} khi {ctx}: dấu hiệu và cách chữa"]),
-    (["Symptom","Cause"],["Nguyên nhân và triệu chứng của {main} khi {ctx}","Trong {ctx}, {main} có nguyên nhân và dấu hiệu gì"]),
-    (["Symptom","Treatment","Cause"],["{main} trong {ctx}: nguyên nhân, triệu chứng và điều trị"]),
-    (["Definition","Population"],["Định nghĩa {main} và đối tượng dễ mắc trong {ctx}"]),
-    (["Treatment","Complication"],["Biến chứng và cách điều trị {main} khi {ctx}"]),
-    (["Cause","Population"],["Nguyên nhân và ai dễ mắc {main} trong {ctx}"]),
-    (["RiskFactor","Prevention"],["Yếu tố nguy cơ và cách phòng tránh {main} khi {ctx}"]),
-    (["Advice","Treatment"],["Lời khuyên và phương pháp điều trị {main} trong {ctx}"])
-]
+# MULTI_TEMPLATES_CTX=[
+#     (["Symptom","Treatment"],["Triệu chứng và cách điều trị {main} trong {ctx}","{main} khi {ctx}: dấu hiệu và cách chữa"]),
+#     (["Symptom","Cause"],["Nguyên nhân và triệu chứng của {main} khi {ctx}","Trong {ctx}, {main} có nguyên nhân và dấu hiệu gì"]),
+#     (["Symptom","Treatment","Cause"],["{main} trong {ctx}: nguyên nhân, triệu chứng và điều trị"]),
+#     (["Definition","Population"],["Định nghĩa {main} và đối tượng dễ mắc trong {ctx}"]),
+#     (["Treatment","Complication"],["Biến chứng và cách điều trị {main} khi {ctx}"]),
+#     (["Cause","Population"],["Nguyên nhân và ai dễ mắc {main} trong {ctx}"]),
+#     (["RiskFactor","Prevention"],["Yếu tố nguy cơ và cách phòng tránh {main} khi {ctx}"]),
+#     (["Advice","Treatment"],["Lời khuyên và phương pháp điều trị {main} trong {ctx}"])
+# ]
 
-DISEASE_INTENT=["{x} là bệnh gì","{x} thuộc bệnh nào","{x} là biểu hiện của bệnh gì",
-    "{x} có phải bệnh lý không","Nếu bị {x} thì nên đi khám bệnh gì","{x} thuộc nhóm bệnh nào"]
+# DISEASE_INTENT=["{x} là bệnh gì","{x} thuộc bệnh nào","{x} là biểu hiện của bệnh gì",
+#     "{x} có phải bệnh lý không","Nếu bị {x} thì nên đi khám bệnh gì","{x} thuộc nhóm bệnh nào"]
 
 # alias map để map layer graph -> key trong TEMPLATES
 LAYER_KEY_MAP = {k:k for k in ALL_FIELDS}
-ALIAS_MAP = {
-    "disease":"Disease", "subdisease":"Subdisease", "sub_disease":"Subdisease",
-    "symptom":"Symptom", "treatment":"Treatment", "cause":"Cause",
-    "definition":"Definition", "population":"Population", "advice":"Advice",
-    "prevention":"Prevention", "riskfactor":"RiskFactor", "application":"Application",
-    "detail":"Detail", "complication":"Complication", "topic":"Topic", "subtopic":"Subdisease"  # subtopic -> Subdisease only if you want
-}
-LAYER_KEY_MAP.update(ALIAS_MAP)
 
 # ---------- Helpers: generate questions from templates ----------
+# def _pick_template_for_key(key: str, main: str, ctx: Optional[str]=None, pick_all: bool=False): out = [] if key in TEMPLATES: tpls = TEMPLATES[key] choices = tpls if pick_all else [random.choice(tpls)] for tpl in choices: if "{main}" in tpl: q = tpl.format(main=main) elif "{x}" in tpl: q = tpl.format(x=main) else: q = tpl.replace("{main}", main).replace("{x}", main) out.append(q)
 def _pick_template_for_key(key: str, main: str, ctx: Optional[str]=None, pick_all: bool=False):
     out = []
     if key in TEMPLATES:
@@ -250,12 +243,6 @@ def _pick_template_for_key(key: str, main: str, ctx: Optional[str]=None, pick_al
             else:
                 q = tpl.replace("{main}", main).replace("{x}", main)
             out.append(q)
-    if ctx and key in TEMPLATES_CTX:
-        tpls = TEMPLATES_CTX[key]
-        choices = tpls if pick_all else [random.choice(tpls)]
-        for tpl in choices:
-            q = tpl.replace("{main}", main).replace("{ctx}", ctx).replace("{x}", main)
-            out.append(q)
     return out
 
 def generate_questions(entity: str, layers: List[str], ctx: Optional[str]=None, pick_all: bool=False, use_multi_templates: bool=True):
@@ -266,22 +253,22 @@ def generate_questions(entity: str, layers: List[str], ctx: Optional[str]=None, 
         qs = _pick_template_for_key(k, entity, ctx=ctx, pick_all=pick_all)
         for q in qs:
             questions.append({"layers":[k], "question":q, "template_type":"single"})
-    # multi-layer
-    if use_multi_templates:
-        for labs,tpls in MULTI_TEMPLATES:
-            norm = [LAYER_KEY_MAP.get(x, x) for x in labs]
-            if all(x in norm_layers for x in norm):
-                choices = tpls if pick_all else [random.choice(tpls)]
-                for tpl in choices:
-                    q = tpl.replace("{main}", entity).replace("{x}", entity)
-                    questions.append({"layers":norm, "question":q, "template_type":"multi"})
-        for labs,tpls in MULTI_TEMPLATES_CTX:
-            norm = [LAYER_KEY_MAP.get(x, x) for x in labs]
-            if ctx and all(x in norm_layers for x in norm):
-                choices = tpls if pick_all else [random.choice(tpls)]
-                for tpl in choices:
-                    q = tpl.replace("{main}", entity).replace("{ctx}", ctx).replace("{x}", entity)
-                    questions.append({"layers":norm, "question":q, "template_type":"multi_ctx"})
+    # # multi-layer
+    # if use_multi_templates:
+    #     for labs,tpls in MULTI_TEMPLATES:
+    #         norm = [LAYER_KEY_MAP.get(x, x) for x in labs]
+    #         if all(x in norm_layers for x in norm):
+    #             choices = tpls if pick_all else [random.choice(tpls)]
+    #             for tpl in choices:
+    #                 q = tpl.replace("{main}", entity).replace("{x}", entity)
+    #                 questions.append({"layers":norm, "question":q, "template_type":"multi"})
+    #     for labs,tpls in MULTI_TEMPLATES_CTX:
+    #         norm = [LAYER_KEY_MAP.get(x, x) for x in labs]
+    #         if ctx and all(x in norm_layers for x in norm):
+    #             choices = tpls if pick_all else [random.choice(tpls)]
+    #             for tpl in choices:
+    #                 q = tpl.replace("{main}", entity).replace("{ctx}", ctx).replace("{x}", entity)
+    #                 questions.append({"layers":norm, "question":q, "template_type":"multi_ctx"})
     # dedup + cap
     seen=set(); out=[]
     for it in questions:
@@ -296,18 +283,12 @@ def split_sentences(text: str):
     sents = [s.strip() for s in _SENT_SPLIT_RE.split(text) if s.strip()]
     return sents if sents else [text.strip()]
 
-def token_match_score(entity: str, text: str):
-    ent = entity.lower().strip()
-    text_l = text.lower()
-    if not ent:
-        return 0.0
-    # exact phrase strong signal
-    if ent in text_l:
-        return 1.0
-    # fallback token overlap (bình thường)
-    e_toks = [t for t in re.findall(r'\w+', ent) if len(t) > 1]  # bỏ token 1-char
+def token_match_score(entity, text):
+    # count tokens of entity present in text (lowercase)
+    e_toks = re.findall(r'\w+', entity.lower())
     if not e_toks:
         return 0.0
+    text_l = text.lower()
     hits = sum(1 for t in set(e_toks) if t and (f" {t} " in f" {text_l} " or t in text_l))
     return hits / len(set(e_toks))
 
@@ -337,61 +318,22 @@ def load_graph_info(path: Path):
     return layer_dict
 
 def find_passages_for_entity(entity_name: str, passages: list, top_k=TOP_K_PASSAGES):
-    """
-    - Trả về list các passages (ưu tiên những passage chứa exact phrase entity).
-    - Nếu passage meta có 'hasanswer' True (nếu bạn đã tiền xử lý), ưu tiên và include.
-    """
-    ent_low = entity_name.lower().strip()
-    scored = []
-
-    # 1) first pass: exact phrase or high token match
+    scored=[]
     for p in passages:
-        text = p.get("text","")
-        score = token_match_score(entity_name, text)
-        # boost if meta indicates is_selected/hasanswer
-        meta = p.get("meta", {}) or {}
-        if meta.get("is_selected") or meta.get("hasanswer") or p.get("hasanswer"):
-            score += 0.5
-        if score > 0:
-            scored.append((score,p))
-
-    # 2) if nothing found, do a looser token search
-    if not scored:
-        for p in passages:
-            text = p.get("text","")
-            e_toks = [t for t in re.findall(r'\w+', ent_low) if len(t)>1]
-            hits = sum(1 for t in e_toks if t in text.lower())
-            if hits:
-                scored.append((hits/len(e_toks), p))
-
-    # sort and take top_k but also include additional passages that have explicit hasanswer True
-    scored = sorted(scored, key=lambda x: x[0], reverse=True)
-
-    # collect top_k plus all passages flagged hasanswer in meta (if any)
-    results = []
-    seen_ids = set()
-    # first top_k
-    for score, p in scored[:top_k]:
-        pid = p.get("id","")
-        results.append({"id":pid, "title":p.get("meta",{}).get("title",""), "text":p.get("text",""), "score":float(score), "hasanswer":True, "isgold": True})
-        seen_ids.add(pid)
-
-    # then include others that explicitly mark hasanswer/is_selected
+        score=token_match_score(entity_name, p.get("text",""))
+        if score>0: scored.append((score,p))
+    if not scored and _USE_SBERT:
+        ent_emb = sbert_model.encode(entity_name, convert_to_tensor=True)
+        texts=[p.get("text","") for p in passages]
+        emb = sbert_model.encode(texts, convert_to_tensor=True)
+        sims = sbert_util.cos_sim(ent_emb, emb)[0].cpu().tolist()
+        scored = [(sims[i], passages[i]) for i in range(len(passages))]
+    scored = sorted(scored, key=lambda x: x[0], reverse=True)[:top_k]
+    results=[]
     for score,p in scored:
-        pid = p.get("id","")
-        meta = p.get("meta",{}) or {}
-        if pid in seen_ids: continue
-        if meta.get("is_selected") or meta.get("hasanswer") or p.get("hasanswer"):
-            results.append({"id":pid, "title":meta.get("title",""), "text":p.get("text",""), "score":float(score), "hasanswer":True, "isgold": True})
-            seen_ids.add(pid)
-
-    # finally, if still empty, fallback to top_k of scored
-    if not results and scored:
-        for score,p in scored[:top_k]:
-            pid = p.get("id","")
-            results.append({"id":pid, "title":p.get("meta",{}).get("title",""), "text":p.get("text",""), "score":float(score), "hasanswer":True, "isgold": True})
-
+        results.append({"id":p.get("id",""), "title":p.get("meta",{}).get("title",""), "text":p.get("text",""), "score":float(score), "hasanswer":True, "isgold":True})
     return results
+
 
 def extract_answer_sentences_vi(entity: str, ctxs: list, max_sentences=MAX_SENTENCES_PER_ANSWER, neighbor_window=2):
     """
@@ -483,6 +425,7 @@ def refine_answer_with_llm_vi(extracted_sentences: list, entity: str, layer: str
     4) Nếu không đủ thông tin để trả lời, trả về chuỗi rỗng.
     5) Độ dài: khoảng 1-3 câu tóm tắt + (nếu cần) 3-8 dòng gạch đầu dòng chi tiết. Tổng không quá 1000 ký tự.
 
+
     Dữ liệu (các câu trích xuất):
     {bullets}
 
@@ -508,7 +451,8 @@ def rephrase_question_vi(base_question: str):
     Bạn là một người dân thường không chuyên về y học. Nhiệm vụ của bạn là viết lại câu hỏi sau đây bằng tiếng Việt sao cho:
     1) Câu hỏi rõ ràng, dễ hiểu, tự nhiên như cách người Việt Nam hay hỏi.
     2) Giữ nguyên ý nghĩa gốc, không thêm bớt thông tin.
-    3) Câu hỏi không quá dài (không quá 20 từ).
+    "Hãy chỉnh câu hỏi sau cho tự nhiên nhưng vẫn phải giữ nguyên entity và ý nghĩa y khoa: {base_question}"
+
     Original: {base_question}
     Output JSON:
     {{"question":"..."}}
@@ -521,15 +465,21 @@ def rephrase_question_vi(base_question: str):
     return base_question
 
 # ---------- MAIN pipeline ----------
+DISEASES = {"Sinh non", "Động kinh", "Xơ gan", "Hội chứng truyền máu song thai (TMST)"}  # ví dụ
+
 def synthesize_dataset_vi(passages_path=PASSAGES_PATH, graph_path=GRAPH_INFO_PATH, out_path=OUTPUT_PATH):
     passages = load_passages(passages_path)
     layer_dict = load_graph_info(graph_path)
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     total_q = 0
-    with open(out_path, "w", encoding="utf-8") as fout:
+    with open(out_path, "a", encoding="utf-8") as fout:
         for layer, entities in layer_dict.items():
             for entity in entities:
+                # ✅ chỉ lấy entity thuộc DISEASES
+                if entity not in TOPICS:
+                    continue  
+
                 layers_for_entity = [layer]
                 ctx = None
                 q_items = generate_questions(entity, layers_for_entity, ctx=ctx, pick_all=False)
@@ -542,7 +492,6 @@ def synthesize_dataset_vi(passages_path=PASSAGES_PATH, graph_path=GRAPH_INFO_PAT
 
                     ctxs = find_passages_for_entity(entity, passages, top_k=TOP_K_PASSAGES)
                     if not ctxs:
-                        # nothing to answer from passages -> skip
                         continue
 
                     pool = [p for p in passages if p.get("id") not in {c["id"] for c in ctxs}]
@@ -550,7 +499,13 @@ def synthesize_dataset_vi(passages_path=PASSAGES_PATH, graph_path=GRAPH_INFO_PAT
                     if pool:
                         sample_negs = random.sample(pool, min(NEGATIVE_CTXS, len(pool)))
                         for n in sample_negs:
-                            negs.append({"id":n.get("id",""), "title": n.get("meta",{}).get("title",""), "text": n.get("text",""), "hasanswer":False, "isgold":False})
+                            negs.append({
+                                "id":n.get("id",""),
+                                "title": n.get("meta",{}).get("title",""),
+                                "text": n.get("text",""),
+                                "hasanswer":False,
+                                "isgold":False
+                            })
                     final_ctxs = ctxs + negs
 
                     extracted = extract_answer_sentences_vi(entity, ctxs, max_sentences=MAX_SENTENCES_PER_ANSWER)
@@ -586,19 +541,24 @@ def synthesize_dataset_vi(passages_path=PASSAGES_PATH, graph_path=GRAPH_INFO_PAT
                         q_reph = rephrase_question_vi(question_text)
                         if q_reph: q_out = q_reph
 
-                    example = {"question": q_out, "answers": [answer_text] if answer_text else [], "ctxs": final_ctxs}
+                    example = {
+                        "question": q_out,
+                        "answers": [answer_text] if answer_text else [],
+                        "ctxs": final_ctxs
+                    }
                     fout.write(json.dumps(example, ensure_ascii=False) + "\n")
                     total_q += 1
     logging.info("Hoàn tất. Lưu dataset tại: %s  (tổng câu hỏi: %d)", out_path, total_q)
+
 
 # fallback helper
 def generate_question_from_template_vn(entity: str, layer: str):
     key = LAYER_KEY_MAP.get(layer, layer)
     if key in TEMPLATES:
         return random.choice(TEMPLATES[key]).replace("{main}", entity).replace("{x}", entity)
-    if key in TEMPLATES_CTX:
-        return random.choice(TEMPLATES_CTX[key]).replace("{main}", entity).replace("{ctx}", "")
-    return f"{entity} là gì?"
+    # if key in TEMPLATES_CTX:
+    #     return random.choice(TEMPLATES_CTX[key]).replace("{main}", entity).replace("{ctx}", "")
+    # return f"{entity} là gì?"
 
 # ---------- chạy ----------
 if __name__ == "__main__":
