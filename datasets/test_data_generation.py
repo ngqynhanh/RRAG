@@ -1,22 +1,23 @@
 import os
 import re
-import traceback
-import pandas as pd
 import json
 import random
 from pathlib import Path
-from transformers import pipeline
-from dotenv import load_dotenv
 from openai import OpenAI
 
+# -----------------------------
+# Cấu hình
+# -----------------------------
 MODEL    = os.getenv("MODEL_ID", "qwen/qwen-2.5-72b-instruct")
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY","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")
 if not OPENROUTER_API_KEY:
     raise RuntimeError("Thiếu OPENROUTER_API_KEY trong .env")
 
 client = OpenAI(api_key=OPENROUTER_API_KEY, base_url="https://openrouter.ai/api/v1")
 
-# 1. Load passages
+# -----------------------------
+# 1. Load passages tổng hợp
+# -----------------------------
 def load_passages(path):
     passages = []
     with open(path, "r", encoding="utf-8") as f:
@@ -24,47 +25,71 @@ def load_passages(path):
             passages.append(json.loads(line))
     return passages
 
-# 2. Dùng model sinh Q&A từ passage
-def generate_qa_from_passage(client, passage_text):
+# -----------------------------
+# 2. Load graph info (CSV / TXT)
+# -----------------------------
+def load_graph_info(path):
+    """
+    Trả về dict {layer_name: set([entity_name])}
+    """
+    layer_dict = {}
+    with open(path, "r", encoding="utf-8") as f:
+        for line in f:
+            # Regex tìm {name: ..., layer: ...}
+            matches = re.findall(r"{name: (.+?), layer: (.+?)}", line)
+            for name, layer in matches:
+                layer_dict.setdefault(layer, set()).add(name.strip())
+    return layer_dict
+
+# -----------------------------
+# 3. Tìm passage liên quan theo keyword
+# -----------------------------
+def find_passages_for_entity(entity_name, passages, top_k=3):
+    matched = []
+    for p in passages:
+        if entity_name.lower() in p["text"].lower():
+            matched.append({
+                "id": p.get("id",""),
+                "title": p.get("meta",{}).get("title",""),
+                "text": p["text"],
+                "hasanswer": True,
+                "isgold": True
+            })
+    return matched[:top_k]
+
+# -----------------------------
+# 4. Sinh câu hỏi từ entity + layer
+# -----------------------------
+def generate_question(entity_text, layer):
     prompt = f"""
-    Đoạn văn: {passage_text}
+Bạn là trợ lý y tế, tạo câu hỏi ngắn từ thông tin sau:
 
-    1. Xác định câu hỏi ngắn phù hợp với đoạn văn.
-    2. Trả lời ngắn gọn.
-    3. Gán nhãn câu hỏi vào một trong 15 lớp sau: 
-    [Definition, Symptom, Cause, Treatment, Prevention, RiskFactor, Disease, SubDisease, Population, Detail, Complication, Advice, Prevention, Topic, SubTopic].
-    Nếu đoạn văn không thuộc lớp nào rõ ràng, hoặc không có thông tin phù hợp (ví dụ Application không tồn tại), hãy trả về "None".
-    
-    Output JSON:
-    {{
-    "question": "...",
-    "answer": "...",
-    "label": "..."
-    }}
+Thông tin: {entity_text}
+Layer: {layer}
 
-    Ví dụ output:
-    {{
-    "question": "Triệu chứng nào gợi ý bạn nên đi khám phụ khoa?",
-    "answers": ["Khi xuất hiện các triệu chứng như đau bụng kinh dữ dội, khí hư bất thường, rối loạn kinh nguyệt hoặc đau khi quan hệ tình dục, bạn nên đi khám bác sĩ phụ khoa."],
-    "labels": ["symptom"]
-    }}
-    
+Hãy tạo ra:
+1. Câu hỏi ngắn, dễ hiểu.
+2. Output dạng JSON:
+{{
+    "question": "..."
+}}
 """
-
     resp = client.chat.completions.create(
         model=MODEL,
         messages=[{"role": "user", "content": prompt}],
-        temperature=0.7,
+        temperature=0.2,
     )
 
     out = resp.choices[0].message.content
     try:
         parsed = json.loads(out[out.index("{"):out.rindex("}")+1])
     except:
-        parsed = {"question": None, "answer": None, "label": None}
-    return parsed["question"], parsed["answer"], parsed["label"]
+        parsed = {"question": None}
+    return parsed["question"]
 
-# 3. Xây ctxs (positive + negatives)
+# -----------------------------
+# 5. Xây ctxs (positive + negatives)
+# -----------------------------
 def build_ctxs(passages, pos_idx, num_neg=2):
     pos = passages[pos_idx]
     negs = random.sample([p for i,p in enumerate(passages) if i!=pos_idx], num_neg)
@@ -87,24 +112,37 @@ def build_ctxs(passages, pos_idx, num_neg=2):
         })
     return ctxs
 
-# MAIN
+# -----------------------------
+# 6. MAIN
+# -----------------------------
 if __name__ == "__main__":
     passages = load_passages("datasets/passages.jsonl")
+    layer_dict = load_graph_info("datasets/neo4j_query_table_data_2025-10-5.txt")
 
-    out_path = Path("datasets/synthetic_qas.jsonl")
-    with open(out_path, "w", encoding="utf-8") as f:
-        for i, passage in enumerate(passages[:50]):  # ví dụ sinh 50 query
-            q, a, l = generate_qa_from_passage(client, passage["text"])
-            if not q or not a:
-                continue
-            ctxs = build_ctxs(passages, i, num_neg=3)
+    output_path = Path("datasets/qas_synthetic.jsonl")
+    with open(output_path, "w", encoding="utf-8") as fout:
+        for layer, entities in layer_dict.items():
+            for entity in entities:
+                # 1. Tìm passages liên quan
+                ctxs = find_passages_for_entity(entity, passages, top_k=3)
+                if not ctxs:
+                    continue
 
-            example = {
-                "question": q,
-                "answers": [a],
-                "labels": [l] if l else [],
-                "ctxs": ctxs
-            }
-            f.write(json.dumps(example, ensure_ascii=False) + "\n")
+                # 2. Gom text passages để làm input cho Q&A
+                combined_text = " ".join([c["text"] for c in ctxs])
 
-    print("Saved synthetic dataset to", out_path)
+                # 3. Sinh câu hỏi
+                question = generate_question(entity, layer)
+                if not question:
+                    continue
+
+                # 4. Tạo JSON cuối cùng
+                example = {
+                    "question": question,
+                    "answers": [combined_text],  # answer gom từ các passage chứa entity
+                    "ctxs": ctxs
+                }
+
+                fout.write(json.dumps(example, ensure_ascii=False) + "\n")
+
+    print("Saved synthetic QAs to", output_path)
