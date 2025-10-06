@@ -73,98 +73,97 @@ def compute_token_match(answer_text, passage_text):
 # 5. Build dataset
 # -----------------------------
 output_path = "D:\\Work\\Side Projects\\rag-paper\\rag-system\\RRAG\\datasets\\qas_synthetic_vi.jsonl"
-output_data = []
 layer_cols = [c for c in df.columns if c not in ["entity_name","entity_type","article_ids"]]
 
+total_q = 0
 with open(output_path, "w", encoding="utf-8") as fout:
-    total_q = 0
     for idx, row in df.iterrows():
         entity_name = row["entity_name"]
         article_ids = ast.literal_eval(row["article_ids"])
-        layers_dict = {c: row[c] for c in layer_cols if pd.notna(row[c]) and row[c] != ""}
 
-        # -----------------
-        # Generate question
-        # -----------------
-        try:
-            prompt_q = f"""Dựa vào entity '{entity_name}' với các layer: {json.dumps(layers_dict, ensure_ascii=False)}, hãy viết 1 câu hỏi y tế ngắn gọn, rõ ràng.
-            ví dụ: 
-            Triệu chứng của bệnh tiểu đường là gì?
-            mang thai nên ăn gì để tốt cho sức khỏe
-            bệnh viêm gan b có lây không
+        for layer_name in layer_cols:
+            layer_value = row[layer_name]
+            if not pd.isna(layer_value) and layer_value != "":
+                
+                # -----------------
+                # Generate question chỉ dựa vào layer này
+                # -----------------
+                try:
+                    prompt_q = f"""Dựa vào entity '{entity_name}' với layer '{layer_name}': "{layer_value}", hãy viết 1 câu hỏi y tế ngắn gọn, rõ ràng.
+Ví dụ:
+- Triệu chứng của bệnh tiểu đường là gì?
+- Mang thai nên ăn gì để tốt cho sức khỏe?
+- Bệnh viêm gan b có lây không?
 
-            KHÔNG DƯỢC GHI NHƯ SAU: Dựa vào thông tin được cung cấp, đây là một câu hỏi y tế ngắn gọn và rõ ràng: bệnh viêm gan b có lây không
-            """
-            question = call_llm(prompt_q)
-        except Exception as e:
-            print(f"[Warning] Không tạo được question cho {entity_name}: {e}")
-            question = f"{entity_name} là gì?"
+KHÔNG DƯỢC GHI NHƯ SAU: "Dựa vào thông tin được cung cấp, đây là một câu hỏi y tế ngắn gọn và rõ ràng: ..." """
+                    question = call_llm(prompt_q)
+                except Exception as e:
+                    print(f"[Warning] Không tạo được question cho {entity_name}, layer {layer_name}: {e}")
+                    question = f"{entity_name} ({layer_name}) là gì?"
 
-        # -----------------
-        # Generate answer
-        # -----------------
-        try:
-            prompt_a = f"""Dựa vào entity '{entity_name}' với các layer: {json.dumps(layers_dict, ensure_ascii=False)}, hãy viết câu trả lời chi tiết, đúng sự thật, không thêm thông tin ngoài layer."""
-            answer = call_llm(prompt_a, max_tokens=500)
-        except Exception as e:
-            print(f"[Warning] Không tạo được answer cho {entity_name}: {e}")
-            answer = "Không có thông tin"
+                # -----------------
+                # Generate answer chỉ dựa vào layer này
+                # -----------------
+                try:
+                    prompt_a = f"""Dựa vào entity '{entity_name}' với layer '{layer_name}': "{layer_value}", hãy viết câu trả lời chi tiết, đúng sự thật, không thêm thông tin ngoài layer."""
+                    answer = call_llm(prompt_a, max_tokens=500)
+                except Exception as e:
+                    print(f"[Warning] Không tạo được answer cho {entity_name}, layer {layer_name}: {e}")
+                    answer = "Không có thông tin"
 
-        # -----------------
-        # Build ctxs list with top-k positive & negative passages
-        # -----------------
-        ctxs_list = []
+                # -----------------
+                # Lấy tất cả passages từ article_ids
+                # -----------------
+                all_passages = []
+                for art_id in article_ids:
+                    source_id = str(int(art_id) - 1)  # theo rule trước đó
+                    all_passages.extend(source_to_passages.get(source_id, []))
 
-        # Lấy tất cả passages của source_id
-        all_passages = []
-        for art_id in article_ids:
-            source_id = str(int(art_id) - 1)
-            all_passages.extend(source_to_passages.get(source_id, []))
+                # -----------------
+                # Tính token score & đánh dấu hasanswer/isgold
+                # -----------------
+                for p in all_passages:
+                    token_score = compute_token_match(answer, p['text'])
+                    p['_token_score'] = token_score
+                    p['_has_answer'] = token_score > 0
+                    p['_is_gold'] = p['_has_answer']
 
-        # Tính token score cho từng passage
-        for p in all_passages:
-            token_score = compute_token_match(answer, p['text'])
-            has_answer = token_score > 0
-            is_gold = has_answer
-            p['_token_score'] = token_score
-            p['_has_answer'] = has_answer
-            p['_is_gold'] = is_gold
+                # -----------------
+                # Top 3 positive passages
+                # -----------------
+                positives = [p for p in all_passages if p['_has_answer']]
+                positives = sorted(positives, key=lambda x: x['_token_score'], reverse=True)[:3]
 
-        # Top 3 positive passages
-        positives = [p for p in all_passages if p['_has_answer']]
-        positives = sorted(positives, key=lambda x: x['_token_score'], reverse=True)[:3]
+                # Top 2 negative passages
+                negatives = [p for p in all_passages if not p['_has_answer']]
+                negatives = sorted(negatives, key=lambda x: x['_token_score'], reverse=True)[:2]
 
-        # Top 2 negative passages
-        negatives = [p for p in all_passages if not p['_has_answer']]
-        negatives = sorted(negatives, key=lambda x: x['_token_score'], reverse=True)[:2]
+                # Gộp lại
+                final_passages = positives + negatives
 
-        # Gộp lại
-        final_passages = positives + negatives
+                # Chuẩn hóa ctxs_list
+                ctxs_list = [
+                    {
+                        "id": p["id"],
+                        "title": p["meta"]["title"],
+                        "text": p["text"],
+                        "score": round(p['_token_score'], 2),
+                        "hasanswer": p['_has_answer'],
+                        "isgold": p['_is_gold']
+                    }
+                    for p in final_passages
+                ]
 
-        # Chuẩn hóa ctxs_list
-        ctxs_list = [
-            {
-                "id": p["id"],
-                "title": p["meta"]["title"],
-                "text": p["text"],
-                "score": round(p['_token_score'], 2),
-                "hasanswer": p['_has_answer'],
-                "isgold": p['_is_gold']
-            }
-            for p in final_passages
-        ]
+                # -----------------
+                # Write one record per layer
+                # -----------------
+                example = {
+                    "question": question,
+                    "answers": [answer] if answer else [],
+                    "ctxs": ctxs_list
+                }
+                fout.write(json.dumps(example, ensure_ascii=False) + "\n")
+                total_q += 1
+                print(f"[Info] Tạo data thành công cho entity '{entity_name}', layer '{layer_name}' ({total_q} câu hỏi)")
 
-        # -----------------
-        # Write one record per question/entity
-        # -----------------
-        example = {
-            "question": question,
-            "answers": [answer] if answer else [],
-            "ctxs": ctxs_list,
-            "score": round(sum([c['score'] for c in ctxs_list])/len(ctxs_list), 2) if ctxs_list else 0.0
-        }
-        fout.write(json.dumps(example, ensure_ascii=False) + "\n")
-        total_q += 1
-        print(f"[Info] Tạo data thành công cho entity '{entity_name}' ({total_q} câu hỏi)")
-
-print(f"Done! Dataset with token match score saved tại: {output_path} (tổng câu hỏi: {total_q})")
+print(f"Done! Dataset saved tại: {output_path} (tổng câu hỏi: {total_q})")
