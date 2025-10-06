@@ -48,16 +48,27 @@ def call_llm(prompt, max_tokens=300):
 # -----------------------------
 # 4. Function: compute_token_match
 # -----------------------------
-def compute_token_match(answer_text, all_contexts):
+def search_passages(entity_name, passages, top_k=3):
+    """
+    Search passages có chứa entity_name (hoặc từ khóa liên quan).
+    Trả về tối đa top_k passages.
+    """
+    results = []
+    for p in passages:
+        if entity_name.lower() in p['text'].lower():  # kiểm tra có chứa entity
+            results.append(p)
+    return results[:top_k]  # lấy top_k
+
+def compute_token_match(answer_text, passage_text):
+    """
+    Tính token match score giữa answer và passage đơn lẻ
+    """
     answer_tokens = set(word_tokenize(answer_text.lower()))
-    context_tokens = set()
-    for ctx in all_contexts:
-        context_tokens.update(word_tokenize(ctx['text'].lower()))
+    passage_tokens = set(word_tokenize(passage_text.lower()))
     if not answer_tokens:
         return 0.0
-    match_count = len(answer_tokens & context_tokens)
+    match_count = len(answer_tokens & passage_tokens)
     return round(match_count / len(answer_tokens), 2)
-
 # -----------------------------
 # 5. Build dataset
 # -----------------------------
@@ -76,62 +87,81 @@ with open(output_path, "w", encoding="utf-8") as fout:
         # Generate question
         # -----------------
         try:
-            prompt_q = f"Dựa vào entity '{entity_name}' với các layer: {json.dumps(layers_dict, ensure_ascii=False)}, hãy viết 1 câu hỏi y tế ngắn gọn, rõ ràng."
+            prompt_q = f"""Dựa vào entity '{entity_name}' với các layer: {json.dumps(layers_dict, ensure_ascii=False)}, hãy viết 1 câu hỏi y tế ngắn gọn, rõ ràng.
+            ví dụ: 
+            Triệu chứng của bệnh tiểu đường là gì?
+            mang thai nên ăn gì để tốt cho sức khỏe
+            bệnh viêm gan b có lây không
+
+            KHÔNG DƯỢC GHI NHƯ SAU: Dựa vào thông tin được cung cấp, đây là một câu hỏi y tế ngắn gọn và rõ ràng: bệnh viêm gan b có lây không
+            """
             question = call_llm(prompt_q)
         except Exception as e:
             print(f"[Warning] Không tạo được question cho {entity_name}: {e}")
-            question = f"Câu hỏi về {entity_name}"
+            question = f"{entity_name} là gì?"
 
         # -----------------
         # Generate answer
         # -----------------
         try:
-            prompt_a = f"Dựa vào entity '{entity_name}' với các layer: {json.dumps(layers_dict, ensure_ascii=False)}, hãy viết câu trả lời chi tiết, đúng sự thật, không thêm thông tin ngoài layer."
+            prompt_a = f"""Dựa vào entity '{entity_name}' với các layer: {json.dumps(layers_dict, ensure_ascii=False)}, hãy viết câu trả lời chi tiết, đúng sự thật, không thêm thông tin ngoài layer."""
             answer = call_llm(prompt_a, max_tokens=500)
         except Exception as e:
             print(f"[Warning] Không tạo được answer cho {entity_name}: {e}")
             answer = "Không có thông tin"
 
         # -----------------
-        # Build ctxs list
+        # Build ctxs list with top-k positive & negative passages
         # -----------------
         ctxs_list = []
+
+        # Lấy tất cả passages của source_id
+        all_passages = []
         for art_id in article_ids:
-            source_id = str(int(art_id) - 1)  # rule
-            for p in source_to_passages.get(source_id, []):
-                ctxs_list.append({
-                    "id": p["id"],
-                    "title": p["meta"]["title"],
-                    "text": p["text"],
-                    "score": 1.0,
-                    "hasanswer": p.get("hasanswer", False),
-                    "isgold": p.get("isgold", False)
-                })
+            source_id = str(int(art_id) - 1)
+            all_passages.extend(source_to_passages.get(source_id, []))
 
-        # fallback nếu ctxs trống
-        if not ctxs_list:
-            ctxs_list.append({
-                "id": "",
-                "title": "",
-                "text": "Không có dữ liệu tham khảo",
-                "score": 0.0,
-                "hasanswer": False,
-                "isgold": False
-            })
+        # Tính token score cho từng passage
+        for p in all_passages:
+            token_score = compute_token_match(answer, p['text'])
+            has_answer = token_score > 0
+            is_gold = has_answer
+            p['_token_score'] = token_score
+            p['_has_answer'] = has_answer
+            p['_is_gold'] = is_gold
+
+        # Top 3 positive passages
+        positives = [p for p in all_passages if p['_has_answer']]
+        positives = sorted(positives, key=lambda x: x['_token_score'], reverse=True)[:3]
+
+        # Top 2 negative passages
+        negatives = [p for p in all_passages if not p['_has_answer']]
+        negatives = sorted(negatives, key=lambda x: x['_token_score'], reverse=True)[:2]
+
+        # Gộp lại
+        final_passages = positives + negatives
+
+        # Chuẩn hóa ctxs_list
+        ctxs_list = [
+            {
+                "id": p["id"],
+                "title": p["meta"]["title"],
+                "text": p["text"],
+                "score": round(p['_token_score'], 2),
+                "hasanswer": p['_has_answer'],
+                "isgold": p['_is_gold']
+            }
+            for p in final_passages
+        ]
 
         # -----------------
-        # Compute token_match_score
-        # -----------------
-        token_match_score = compute_token_match(answer, ctxs_list)
-
-        # -----------------
-        # Write to file
+        # Write one record per question/entity
         # -----------------
         example = {
             "question": question,
             "answers": [answer] if answer else [],
             "ctxs": ctxs_list,
-            "score": token_match_score
+            "score": round(sum([c['score'] for c in ctxs_list])/len(ctxs_list), 2) if ctxs_list else 0.0
         }
         fout.write(json.dumps(example, ensure_ascii=False) + "\n")
         total_q += 1
