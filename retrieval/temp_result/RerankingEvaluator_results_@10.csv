@@ -1,0 +1,2 @@
+epoch,steps,MAP,MRR@10,NDCG@10
+-1,-1,1.0,1.0,1.0

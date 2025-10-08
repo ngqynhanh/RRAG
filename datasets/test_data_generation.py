@@ -11,7 +11,7 @@ import os
 # -----------------------------
 # 1. Load filtered entity file
 # -----------------------------
-df = pd.read_csv("datasets/entity_full_mapping_filtered.csv")
+df = pd.read_csv("datasets/data/5.csv")
 
 # -----------------------------
 # 2. Load passages data
@@ -39,7 +39,7 @@ def call_llm(prompt, max_tokens=300):
     resp = client.chat.completions.create(
         model="qwen/qwen-2.5-72b-instruct",
         messages=[{"role": "user", "content": prompt}],
-        temperature=0.2,
+        temperature=0.08,
         max_tokens=max_tokens
     )
     print("Kết nối được với OPENROUTER")
@@ -72,12 +72,13 @@ def compute_token_match(answer_text, passage_text):
 # -----------------------------
 # 5. Build dataset
 # -----------------------------
-output_path = "D:\\Work\\Side Projects\\rag-paper\\rag-system\\RRAG\\datasets\\qas_synthetic_vi.jsonl"
+output_path = "D:\\Work\\side-projects\\rag-paper\\rag-system\\RRAG\\datasets\\qas_synthetic_vi.jsonl"
 layer_cols = [c for c in df.columns if c not in ["entity_name","entity_type","article_ids"]]
 
 total_q = 0
-with open(output_path, "w", encoding="utf-8") as fout:
+with open(output_path, "a", encoding="utf-8") as fout:
     for idx, row in df.iterrows():
+        while 
         entity_name = row["entity_name"]
         article_ids = ast.literal_eval(row["article_ids"])
 
@@ -89,11 +90,37 @@ with open(output_path, "w", encoding="utf-8") as fout:
                 # Generate question chỉ dựa vào layer này
                 # -----------------
                 try:
-                    prompt_q = f"""Dựa vào entity '{entity_name}' với layer '{layer_name}': "{layer_value}", hãy viết 1 câu hỏi y tế ngắn gọn, rõ ràng.
-Ví dụ:
-- Triệu chứng của bệnh tiểu đường là gì?
-- Mang thai nên ăn gì để tốt cho sức khỏe?
-- Bệnh viêm gan b có lây không?
+                    prompt_q = f"""Dựa vào entity '{entity_name}' với layer '{layer_name}', hãy viết 1 câu hỏi y tế ngắn gọn, rõ ràng. không cần dấu chấm hỏi cuối câu. Xem '{layer_name}' phù hợp với thông tin nào bên dưới 
+một số câu mẫu như sau
+  "symptom": [
+    "Khi nào thì biết mình đang mắc {entity_name}"
+  ],
+  "cause": ["Tại sao nhiều người mắc {entity_name}"],
+  "treatment": [
+    "Các phương pháp y học hiện đại chữa {entity_name}"
+  ],
+  "complication": ["Nguy cơ về sức khỏe khi bị {entity_name}"],
+  "population": [
+    "{entity_name} thường gặp ở nam hay nữ"
+  ],
+  "definition": [
+    "{entity_name} là thuật ngữ chỉ điều gì"
+  ],
+  "detail": [
+    "Cung cấp thêm thông tin về {entity_name}"
+  ],
+  "subdisease": [
+    "Bệnh {entity_name} chia thành những thể nào"
+  ],
+  "application": ["{entity_name} được dùng để làm gì trong y tế"
+  ],
+  "advice": [
+    "Những điều cần tránh khi có {entity_name}"
+  ],
+  "riskfactor": [
+    "Yếu tố làm tăng khả năng mắc {entity_name}"
+  ],
+  "prevention": ["Thói quen giúp hạn chế {entity_name}"]
 
 KHÔNG DƯỢC GHI NHƯ SAU: "Dựa vào thông tin được cung cấp, đây là một câu hỏi y tế ngắn gọn và rõ ràng: ..." """
                     question = call_llm(prompt_q)
@@ -105,7 +132,7 @@ KHÔNG DƯỢC GHI NHƯ SAU: "Dựa vào thông tin được cung cấp, đây l
                 # Generate answer chỉ dựa vào layer này
                 # -----------------
                 try:
-                    prompt_a = f"""Dựa vào entity '{entity_name}' với layer '{layer_name}': "{layer_value}", hãy viết câu trả lời chi tiết, đúng sự thật, không thêm thông tin ngoài layer."""
+                    prompt_a = f"""Dựa vào entity '{entity_name}' với layer '{layer_name}': "{layer_value}", hãy viết câu trả lời chi tiết, đúng sự thật, không thêm thông tin ngoài layer. Chỉ đưa ra câu trả lời bằng tiếng việt"""
                     answer = call_llm(prompt_a, max_tokens=500)
                 except Exception as e:
                     print(f"[Warning] Không tạo được answer cho {entity_name}, layer {layer_name}: {e}")
@@ -125,7 +152,7 @@ KHÔNG DƯỢC GHI NHƯ SAU: "Dựa vào thông tin được cung cấp, đây l
                 for p in all_passages:
                     token_score = compute_token_match(answer, p['text'])
                     p['_token_score'] = token_score
-                    p['_has_answer'] = token_score > 0
+                    p['_has_answer'] = token_score > 0.15
                     p['_is_gold'] = p['_has_answer']
 
                 # -----------------

@@ -1,0 +1,9 @@
+{
+  "__version__": {
+    "sentence_transformers": "2.6.1",
+    "transformers": "4.40.2",
+    "pytorch": "2.8.0+cpu"
+  },
+  "prompts": {},
+  "default_prompt_name": null
+}

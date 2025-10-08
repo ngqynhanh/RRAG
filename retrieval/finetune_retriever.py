@@ -133,7 +133,9 @@ def main(dataset_name, input_path, train_data_path, test_data_path, model_name, 
     )
 
     ##### Eval
-    r = dev_evaluator(model, output_path='temp_result') # bert finetune 0.9601560398170568
+    output_dir = 'temp_result'
+    os.makedirs(output_dir, exist_ok=True) 
+    r = dev_evaluator(model, output_path=output_dir)# bert finetune 0.9601560398170568
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Finetune a retriever")
@@ -148,4 +150,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     main(args.dataset_name, args.input_path, args.train_data_path, args.test_data_path, args.model_name, args.model_save_path, args.train_batch_size, args.num_epochs)
+
+
+# python finetune_retriever.py --dataset_name nq_10 --input_path D:\Work\side-projects\rag-paper\rag-system\RRAG\datasets\qas_synthetic_vi.jsonl --model_name google-bert/bert-base-uncased --train_batch_size 32 --num_epochs 4
 
